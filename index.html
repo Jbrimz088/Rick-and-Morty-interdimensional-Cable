@@ -48,6 +48,11 @@
     const dimName = document.getElementById('dim-name');
     const staticOverlay = document.getElementById('static');
 
+    // Video base URL: leave '' for local or GitHub Pages when videos are in the repo (no LFS).
+    // If videos don't play on GitHub (e.g. you use Git LFS), host them elsewhere and set this
+    // to that folder URL ending with /, e.g. 'https://yourusername.github.io/repo-name/Videos/'
+    const VIDEO_BASE = '';
+
     function play(file, element) {
         // Show static transition
         staticOverlay.style.opacity = "0.3";
@@ -57,8 +62,7 @@
         element.classList.add('active');
 
         setTimeout(() => {
-            // Load file from Videos folder (Case Sensitive)
-            player.src = `Videos/${file}`;
+            player.src = VIDEO_BASE + 'Videos/' + file;
             dimName.innerText = file.replace('.mp4', '').replace(/_/g, ' ');
             
             player.load();
