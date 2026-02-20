@@ -4,72 +4,68 @@
     <meta charset="UTF-8">
     <title>Interdimensional Cable</title>
     <style>
-        body { margin: 0; display: flex; height: 100vh; background: #000; color: #00ff41; font-family: sans-serif; }
+        body { margin: 0; display: flex; height: 100vh; background: #000; color: #39FF14; font-family: 'Courier New', Courier, monospace; overflow: hidden; }
         
-        /* Sidebar Selector */
-        #selector { width: 300px; background: #111; border-right: 1px solid #333; overflow-y: auto; padding: 10px; }
-        .channel { padding: 15px; border-bottom: 1px solid #222; cursor: pointer; transition: 0.2s; }
-        .channel:hover { background: #00ff41; color: #000; }
-        .active { background: #052205; border-left: 4px solid #00ff41; }
+        /* Sidebar */
+        #channels { width: 200px; border-right: 2px solid #39FF14; padding: 10px; display: flex; flex-direction: column; gap: 10px; background: #050505; }
+        .header { font-size: 12px; text-decoration: underline; margin-bottom: 5px; }
+        .btn { border: 1px solid #333; padding: 8px; cursor: pointer; text-align: center; font-size: 11px; transition: 0.2s; }
+        .btn:hover { background: #39FF14; color: #000; box-shadow: 0 0 10px #39FF14; }
+        .active { background: #39FF14; color: #000; }
 
-        /* Video Area */
-        #viewer { flex-grow: 1; display: flex; align-items: center; justify-content: center; }
-        video { width: 100%; height: 100%; }
+        /* Viewer */
+        #viewer { flex-grow: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; }
+        video { width: 85%; max-height: 70vh; border: 4px solid #333; border-radius: 8px; box-shadow: 0 0 20px rgba(0,0,0,1); }
+        .info { margin-top: 20px; font-size: 14px; letter-spacing: 2px; }
     </style>
 </head>
 <body>
 
-<div id="selector">
-    <h2 style="text-align:center">CHANNELS</h2>
-    <div id="list"></div>
+<div id="channels">
+    <div class="header">CHANNELS</div>
+    <div class="btn" onclick="play('Ball_Fondlers.mp4', this)">Ball Fondlers</div>
+    <div class="btn" onclick="play('Gazorpazorpfield.mp4', this)">Gazorpazorpfield</div>
+    <div class="btn" onclick="play('Two_Brothers.mp4', this)">Two Brothers</div>
+    <div class="btn" onclick="play('Turbulent_Juice.mp4', this)">Turbulent Juice</div>
+    <div class="btn" onclick="play('Strawberry_Smiggles.mp4', this)">Strawberry Smiggles</div>
 </div>
 
 <div id="viewer">
-    <video id="video-player" controls autoplay></video>
+    <video id="main-player" controls autoplay></video>
+    <div class="info">CURRENT DIMENSION: <span id="dim-name">SCANNING...</span></div>
 </div>
 
 <script>
-    // List your exact filenames here
-    const videoFiles = [
-        "Two_Brothers.mp4",
-        "Ball_Fondlers.mp4",
-        "Gazorpazorpfield.mp4",
-        "Turbulent_Juice.mp4"
-    ];
+    const player = document.getElementById('main-player');
+    const dimName = document.getElementById('dim-name');
 
-    const player = document.getElementById('video-player');
-    const list = document.getElementById('list');
+    function play(file, element) {
+        // 1. Update Buttons
+        document.querySelectorAll('.btn').forEach(b => b.classList.remove('active'));
+        element.classList.add('active');
 
-    videoFiles.forEach((file, index) => {
-        const item = document.createElement('div');
-        item.className = 'channel';
-        item.innerText = file.replace('.mp4', '').replace(/_/g, ' ');
+        // 2. Load and Play from the "Videos" folder
+        // IMPORTANT: Ensure the folder name "Videos" starts with a Capital V if your folder does!
+        player.src = `Videos/${file}`;
+        dimName.innerText = file.replace('.mp4', '').replace(/_/g, ' ').toUpperCase();
         
-        item.onclick = () => {
-            // Update active styling
-            document.querySelectorAll('.channel').forEach(el => el.classList.remove('active'));
-            item.classList.add('active');
-            
-            // Play video from Videos folder
-            player.src = `Videos/${file}`;
-            player.play();
-        };
-        
-        list.appendChild(item);
-    });
+        player.load();
+        player.play().catch(e => console.log("Autoplay blocked or file not found"));
+    }
 
-    // Autoplay the first video on load
-    window.onload = () => {
-        const firstItem = document.querySelector('.channel');
-        if(firstItem) firstItem.click();
+    // Auto-advance to next video when current one ends
+    player.onended = function() {
+        let active = document.querySelector('.active');
+        let next = active.nextElementSibling;
+        if (next && next.classList.contains('btn')) {
+            next.click();
+        } else {
+            document.querySelector('.btn').click(); // Loop back to start
+        }
     };
 
-    // Auto-advance to next video when current ends
-    player.onended = () => {
-        const active = document.querySelector('.active');
-        const next = active.nextElementSibling || document.querySelector('.channel');
-        if(next) next.click();
-    };
+    // Load first video on start
+    window.onload = () => document.querySelector('.btn').click();
 </script>
 
 </body>
