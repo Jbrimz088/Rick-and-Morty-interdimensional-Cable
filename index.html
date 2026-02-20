@@ -2,93 +2,74 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Interdimensional Cable Box</title>
+    <title>Interdimensional Cable</title>
     <style>
-        body { background: #0a0a0a; color: #00ff41; font-family: 'Courier New', monospace; display: flex; height: 100vh; margin: 0; overflow: hidden; }
+        body { margin: 0; display: flex; height: 100vh; background: #000; color: #00ff41; font-family: sans-serif; }
         
-        /* Sidebar for Show Selection */
-        #sidebar { width: 250px; background: #1a1a1a; border-right: 2px solid #00ff41; padding: 20px; overflow-y: auto; }
-        .show-item { padding: 10px; margin-bottom: 10px; border: 1px solid #333; cursor: pointer; text-align: center; transition: 0.2s; }
-        .show-item:hover { background: #00ff41; color: #000; box-shadow: 0 0 10px #00ff41; }
-        .active-show { border-color: #00ff41; background: #052205; }
+        /* Sidebar Selector */
+        #selector { width: 300px; background: #111; border-right: 1px solid #333; overflow-y: auto; padding: 10px; }
+        .channel { padding: 15px; border-bottom: 1px solid #222; cursor: pointer; transition: 0.2s; }
+        .channel:hover { background: #00ff41; color: #000; }
+        .active { background: #052205; border-left: 4px solid #00ff41; }
 
-        /* Main TV Area */
-        #tv-frame { flex-grow: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; background: radial-gradient(circle, #222 0%, #000 100%); }
-        .screen { width: 80%; border: 15px solid #333; border-radius: 10px; position: relative; background: #000; box-shadow: 0 0 50px rgba(0,0,0,1); }
-        video { width: 100%; display: block; }
-
-        /* Static Overlay */
-        #static { position: absolute; top:0; left:0; width:100%; height:100%; background: url('https://media.giphy.com/media/oEI9uWUicfLxC/giphy.gif'); opacity: 0; pointer-events: none; z-index: 10; }
-        
-        .info { margin-top: 15px; font-size: 1.2rem; text-transform: uppercase; }
+        /* Video Area */
+        #viewer { flex-grow: 1; display: flex; align-items: center; justify-content: center; }
+        video { width: 100%; height: 100%; }
     </style>
 </head>
 <body>
 
-<div id="sidebar">
-    <h3>CHANNELS</h3>
-    <div id="channel-list"></div>
+<div id="selector">
+    <h2 style="text-align:center">CHANNELS</h2>
+    <div id="list"></div>
 </div>
 
-<div id="tv-frame">
-    <div class="screen">
-        <div id="static"></div>
-        <video id="main-player" controls autoplay></video>
-    </div>
-    <div class="info">Current Dimension: <span id="current-show">SCANNING...</span></div>
+<div id="viewer">
+    <video id="video-player" controls autoplay></video>
 </div>
 
 <script>
-    // List your filenames here (pointing to your Videos folder)
-    const videos = [
+    // List your exact filenames here
+    const videoFiles = [
+        "Two_Brothers.mp4",
         "Ball_Fondlers.mp4",
         "Gazorpazorpfield.mp4",
-        "Two_Brothers.mp4",
-        "Turbulent_Juice.mp4",
-        "Strawberry_Smiggles.mp4"
+        "Turbulent_Juice.mp4"
     ];
 
-    const player = document.getElementById('main-player');
-    const static = document.getElementById('static');
-    const listContainer = document.getElementById('channel-list');
-    const titleDisplay = document.getElementById('current-show');
+    const player = document.getElementById('video-player');
+    const list = document.getElementById('list');
 
-    // Create the sidebar list
-    videos.forEach((file, index) => {
-        const div = document.createElement('div');
-        div.className = 'show-item';
-        div.innerText = file.replace('.mp4', '').replace(/_/g, ' ');
-        div.onclick = () => playShow(file, div);
-        listContainer.appendChild(div);
+    videoFiles.forEach((file, index) => {
+        const item = document.createElement('div');
+        item.className = 'channel';
+        item.innerText = file.replace('.mp4', '').replace(/_/g, ' ');
+        
+        item.onclick = () => {
+            // Update active styling
+            document.querySelectorAll('.channel').forEach(el => el.classList.remove('active'));
+            item.classList.add('active');
+            
+            // Play video from Videos folder
+            player.src = `Videos/${file}`;
+            player.play();
+        };
+        
+        list.appendChild(item);
     });
 
-    function playShow(file, element) {
-        // Visual Transition
-        static.style.opacity = "0.5";
-        
-        // Remove active class from others
-        document.querySelectorAll('.show-item').forEach(el => el.classList.remove('active-show'));
-        element.classList.add('active-show');
-
-        setTimeout(() => {
-            player.src = `Videos/${file}`;
-            titleDisplay.innerText = file.replace('.mp4', '');
-            player.play();
-            static.style.opacity = "0";
-        }, 400);
-    }
-
-    // Autoplay Next Video when one ends
-    player.onended = () => {
-        let currentIndex = videos.findIndex(v => player.src.includes(v));
-        let nextIndex = (currentIndex + 1) % videos.length;
-        const nextFile = videos[nextIndex];
-        const nextElement = document.querySelectorAll('.show-item')[nextIndex];
-        playShow(nextFile, nextElement);
+    // Autoplay the first video on load
+    window.onload = () => {
+        const firstItem = document.querySelector('.channel');
+        if(firstItem) firstItem.click();
     };
 
-    // Boot up first video
-    playShow(videos[0], document.querySelector('.show-item'));
+    // Auto-advance to next video when current ends
+    player.onended = () => {
+        const active = document.querySelector('.active');
+        const next = active.nextElementSibling || document.querySelector('.channel');
+        if(next) next.click();
+    };
 </script>
 
 </body>
