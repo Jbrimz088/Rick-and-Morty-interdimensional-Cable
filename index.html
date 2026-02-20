@@ -2,60 +2,87 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Interdimensional Cable</title>
     <style>
-        body { margin: 0; display: flex; height: 100vh; background: #000; color: #39FF14; font-family: 'Courier New', monospace; }
-        #sidebar { width: 220px; border-right: 1px solid #39FF14; padding: 10px; background: #050505; z-index: 2; }
-        .btn { border: 1px solid #333; padding: 10px; cursor: pointer; margin-bottom: 5px; font-size: 12px; }
-        .btn:hover, .active { background: #39FF14; color: #000; box-shadow: 0 0 10px #39FF14; }
-        #viewer { flex-grow: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; }
-        video { width: 90%; max-height: 80vh; background: #111; border: 2px solid #222; }
-        .status { margin-top: 10px; font-size: 12px; }
+        body { margin: 0; display: flex; height: 100vh; background: #000; color: #39FF14; font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; overflow: hidden; }
+        
+        /* Sidebar Navigation */
+        #channels { width: 220px; border-right: 2px solid #39FF14; padding: 15px; display: flex; flex-direction: column; gap: 10px; background: #050505; overflow-y: auto; }
+        .header { font-size: 14px; font-weight: bold; text-decoration: underline; margin-bottom: 10px; color: #39FF14; }
+        .btn { border: 1px solid #1a1a1a; padding: 12px; cursor: pointer; text-align: left; font-size: 11px; transition: 0.2s; text-transform: uppercase; }
+        .btn:hover { background: #39FF14; color: #000; box-shadow: 0 0 10px #39FF14; }
+        .active { background: #39FF14; color: #000; border-color: #39FF14; }
+
+        /* Main Video Viewer */
+        #viewer { flex-grow: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; background: radial-gradient(circle, #111 0%, #000 100%); }
+        video { width: 90%; max-height: 80vh; border: 2px solid #222; border-radius: 4px; background: #000; box-shadow: 0 0 40px rgba(0,0,0,0.5); }
+        .info { margin-top: 20px; font-size: 14px; letter-spacing: 2px; text-transform: uppercase; }
+        
+        /* Optional Static Overlay */
+        #static { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: url('https://media.giphy.com/media/oEI9uWUicfLxC/giphy.gif'); opacity: 0; pointer-events: none; transition: opacity 0.1s; z-index: 10; }
     </style>
 </head>
 <body>
 
-<div id="sidebar">
-    <div style="font-size: 10px; margin-bottom: 10px;">CHANNELS</div>
+<div id="static"></div>
+
+<div id="channels">
+    <div class="header">CHANNELS</div>
     <div class="btn" onclick="play('Ball_Fondlers.mp4', this)">Ball Fondlers</div>
+    <div class="btn" onclick="play('Ants_In_My_Eyes_Johnson.mp4', this)">Ants In My Eyes Johnson</div>
+    <div class="btn" onclick="play('lil_bits.mp4', this)">Lil Bits</div>
     <div class="btn" onclick="play('Gazorpazorpfield.mp4', this)">Gazorpazorpfield</div>
     <div class="btn" onclick="play('Two_Brothers.mp4', this)">Two Brothers</div>
     <div class="btn" onclick="play('Turbulent_Juice.mp4', this)">Turbulent Juice</div>
+    <div class="btn" onclick="play('Strawberry_Smiggles.mp4', this)">Strawberry Smiggles</div>
 </div>
 
 <div id="viewer">
     <video id="player" controls autoplay playsinline></video>
-    <div class="status">DIMENSION: <span id="cur">OFFLINE</span></div>
+    <div class="info">CURRENT DIMENSION: <span id="dim-name">OFFLINE</span></div>
 </div>
 
 <script>
     const player = document.getElementById('player');
+    const dimName = document.getElementById('dim-name');
+    const staticOverlay = document.getElementById('static');
 
-    function play(file, el) {
-        // Clear active states
+    function play(file, element) {
+        // Show static transition
+        staticOverlay.style.opacity = "0.3";
+        
+        // UI Updates
         document.querySelectorAll('.btn').forEach(b => b.classList.remove('active'));
-        el.classList.add('active');
+        element.classList.add('active');
 
-        // FORCE PATH: Ensures it looks in your Videos folder
-        // Note: Capital 'V' must match your folder name exactly
-        player.src = "Videos/" + file;
-        document.getElementById('cur').innerText = file.replace('.mp4', '');
-
-        player.load();
-        player.play().catch(() => {
-            console.log("User interaction required to play audio.");
-        });
+        setTimeout(() => {
+            // Load file from Videos folder (Case Sensitive)
+            player.src = `Videos/${file}`;
+            dimName.innerText = file.replace('.mp4', '').replace(/_/g, ' ');
+            
+            player.load();
+            player.play().catch(e => console.log("Autoplay requires user interaction."));
+            staticOverlay.style.opacity = "0";
+        }, 300);
     }
 
-    // Loop to next video automatically
+    // Autoplay logic: move to next channel when video ends
     player.onended = () => {
-        let next = document.querySelector('.active').nextElementSibling;
-        if (next) next.click();
-        else document.querySelector('.btn').click();
+        const active = document.querySelector('.active');
+        const next = active.nextElementSibling;
+        if (next && next.classList.contains('btn')) {
+            next.click();
+        } else {
+            document.querySelector('.btn').click(); // Loop to top
+        }
     };
 
-    // Load first video on start
-    window.onload = () => document.querySelector('.btn').click();
+    // Auto-load first channel
+    window.onload = () => {
+        const firstBtn = document.querySelector('.btn');
+        if(firstBtn) firstBtn.click();
+    };
 </script>
 
 </body>
