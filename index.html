@@ -2,73 +2,93 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Interdimensional Cable</title>
+    <title>Interdimensional Cable Box</title>
     <style>
-        body { background: #1a1a1a; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; font-family: 'Courier New', monospace; }
+        body { background: #0a0a0a; color: #00ff41; font-family: 'Courier New', monospace; display: flex; height: 100vh; margin: 0; overflow: hidden; }
         
-        /* Retro TV Styling */
-        .tv-box { background: #4e342e; padding: 30px; border-radius: 40px; border: 8px solid #3e2723; box-shadow: 0 0 30px rgba(0,255,65,0.3); width: 800px; position: relative; }
+        /* Sidebar for Show Selection */
+        #sidebar { width: 250px; background: #1a1a1a; border-right: 2px solid #00ff41; padding: 20px; overflow-y: auto; }
+        .show-item { padding: 10px; margin-bottom: 10px; border: 1px solid #333; cursor: pointer; text-align: center; transition: 0.2s; }
+        .show-item:hover { background: #00ff41; color: #000; box-shadow: 0 0 10px #00ff41; }
+        .active-show { border-color: #00ff41; background: #052205; }
+
+        /* Main TV Area */
+        #tv-frame { flex-grow: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; background: radial-gradient(circle, #222 0%, #000 100%); }
+        .screen { width: 80%; border: 15px solid #333; border-radius: 10px; position: relative; background: #000; box-shadow: 0 0 50px rgba(0,0,0,1); }
+        video { width: 100%; display: block; }
+
+        /* Static Overlay */
+        #static { position: absolute; top:0; left:0; width:100%; height:100%; background: url('https://media.giphy.com/media/oEI9uWUicfLxC/giphy.gif'); opacity: 0; pointer-events: none; z-index: 10; }
         
-        .screen-container { background: #000; border: 15px solid #222; border-radius: 20px; overflow: hidden; position: relative; aspect-ratio: 16/9; }
-        
-        video { width: 100%; height: 100%; object-fit: contain; }
-
-        /* HUD Overlay */
-        .overlay { position: absolute; top: 10px; left: 10px; color: #0f0; text-shadow: 0 0 5px #0f0; pointer-events: none; }
-
-        /* Static Effect */
-        #static { position: absolute; top:0; left:0; width:100%; height:100%; background: url('https://media.giphy.com/media/oEI9uWUicfLxC/giphy.gif'); opacity: 0; pointer-events: none; transition: opacity 0.1s; }
-
-        /* Controls */
-        .controls { display: flex; justify-content: space-between; align-items: center; margin-top: 20px; }
-        .knob { width: 60px; height: 60px; background: #222; border: 4px solid #00ff41; border-radius: 50%; color: #00ff41; cursor: pointer; font-weight: bold; transition: transform 0.2s; }
-        .knob:active { transform: rotate(45deg); }
-        .speaker { width: 150px; height: 50px; background: repeating-linear-gradient(90deg, #333 0px, #333 5px, transparent 5px, transparent 10px); }
+        .info { margin-top: 15px; font-size: 1.2rem; text-transform: uppercase; }
     </style>
 </head>
 <body>
 
-<div class="tv-box">
-    <div class="screen-container">
-        <div id="static"></div>
-        <div class="overlay">DIMENSION: <span id="dim-id">C-137</span></div>
-        <video id="player" src="" autoplay onended="changeChannel()"></video>
-    </div>
+<div id="sidebar">
+    <h3>CHANNELS</h3>
+    <div id="channel-list"></div>
+</div>
 
-    <div class="controls">
-        <div class="speaker"></div>
-        <button class="knob" onclick="changeChannel()">NEXT</button>
+<div id="tv-frame">
+    <div class="screen">
+        <div id="static"></div>
+        <video id="main-player" controls autoplay></video>
     </div>
+    <div class="info">Current Dimension: <span id="current-show">SCANNING...</span></div>
 </div>
 
 <script>
-    const clips = [
-        "video1.mp4", 
-        "video2.mp4", 
-        "video3.mp4"
+    // List your filenames here (pointing to your Videos folder)
+    const videos = [
+        "Ball_Fondlers.mp4",
+        "Gazorpazorpfield.mp4",
+        "Two_Brothers.mp4",
+        "Turbulent_Juice.mp4",
+        "Strawberry_Smiggles.mp4"
     ];
 
-    const player = document.getElementById('player');
+    const player = document.getElementById('main-player');
     const static = document.getElementById('static');
-    const dimDisplay = document.getElementById('dim-id');
+    const listContainer = document.getElementById('channel-list');
+    const titleDisplay = document.getElementById('current-show');
 
-    function changeChannel() {
-        // Show static
-        static.style.opacity = "0.4";
+    // Create the sidebar list
+    videos.forEach((file, index) => {
+        const div = document.createElement('div');
+        div.className = 'show-item';
+        div.innerText = file.replace('.mp4', '').replace(/_/g, ' ');
+        div.onclick = () => playShow(file, div);
+        listContainer.appendChild(div);
+    });
+
+    function playShow(file, element) {
+        // Visual Transition
+        static.style.opacity = "0.5";
         
+        // Remove active class from others
+        document.querySelectorAll('.show-item').forEach(el => el.classList.remove('active-show'));
+        element.classList.add('active-show');
+
         setTimeout(() => {
-            // Randomize video and dimension name
-            const randomClip = clips[Math.floor(Math.random() * clips.length)];
-            player.src = randomClip;
-            dimDisplay.innerText = Math.random().toString(36).substring(7).toUpperCase();
-            
+            player.src = `Videos/${file}`;
+            titleDisplay.innerText = file.replace('.mp4', '');
             player.play();
             static.style.opacity = "0";
-        }, 300);
+        }, 400);
     }
 
-    // Start first channel
-    changeChannel();
+    // Autoplay Next Video when one ends
+    player.onended = () => {
+        let currentIndex = videos.findIndex(v => player.src.includes(v));
+        let nextIndex = (currentIndex + 1) % videos.length;
+        const nextFile = videos[nextIndex];
+        const nextElement = document.querySelectorAll('.show-item')[nextIndex];
+        playShow(nextFile, nextElement);
+    };
+
+    // Boot up first video
+    playShow(videos[0], document.querySelector('.show-item'));
 </script>
 
 </body>
