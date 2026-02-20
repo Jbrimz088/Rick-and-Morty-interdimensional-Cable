@@ -4,64 +4,54 @@
     <meta charset="UTF-8">
     <title>Interdimensional Cable</title>
     <style>
-        body { margin: 0; display: flex; height: 100vh; background: #000; color: #39FF14; font-family: 'Courier New', Courier, monospace; overflow: hidden; }
-        
-        /* Sidebar */
-        #channels { width: 200px; border-right: 2px solid #39FF14; padding: 10px; display: flex; flex-direction: column; gap: 10px; background: #050505; }
-        .header { font-size: 12px; text-decoration: underline; margin-bottom: 5px; }
-        .btn { border: 1px solid #333; padding: 8px; cursor: pointer; text-align: center; font-size: 11px; transition: 0.2s; }
-        .btn:hover { background: #39FF14; color: #000; box-shadow: 0 0 10px #39FF14; }
-        .active { background: #39FF14; color: #000; }
-
-        /* Viewer */
-        #viewer { flex-grow: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; }
-        video { width: 85%; max-height: 70vh; border: 4px solid #333; border-radius: 8px; box-shadow: 0 0 20px rgba(0,0,0,1); }
-        .info { margin-top: 20px; font-size: 14px; letter-spacing: 2px; }
+        body { margin: 0; display: flex; height: 100vh; background: #000; color: #39FF14; font-family: 'Courier New', monospace; }
+        #sidebar { width: 220px; border-right: 1px solid #39FF14; padding: 10px; background: #050505; z-index: 2; }
+        .btn { border: 1px solid #333; padding: 10px; cursor: pointer; margin-bottom: 5px; font-size: 12px; }
+        .btn:hover, .active { background: #39FF14; color: #000; box-shadow: 0 0 10px #39FF14; }
+        #viewer { flex-grow: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        video { width: 90%; max-height: 80vh; background: #111; border: 2px solid #222; }
+        .status { margin-top: 10px; font-size: 12px; }
     </style>
 </head>
 <body>
 
-<div id="channels">
-    <div class="header">CHANNELS</div>
+<div id="sidebar">
+    <div style="font-size: 10px; margin-bottom: 10px;">CHANNELS</div>
     <div class="btn" onclick="play('Ball_Fondlers.mp4', this)">Ball Fondlers</div>
     <div class="btn" onclick="play('Gazorpazorpfield.mp4', this)">Gazorpazorpfield</div>
     <div class="btn" onclick="play('Two_Brothers.mp4', this)">Two Brothers</div>
     <div class="btn" onclick="play('Turbulent_Juice.mp4', this)">Turbulent Juice</div>
-    <div class="btn" onclick="play('Strawberry_Smiggles.mp4', this)">Strawberry Smiggles</div>
 </div>
 
 <div id="viewer">
-    <video id="main-player" controls autoplay></video>
-    <div class="info">CURRENT DIMENSION: <span id="dim-name">SCANNING...</span></div>
+    <video id="player" controls autoplay playsinline></video>
+    <div class="status">DIMENSION: <span id="cur">OFFLINE</span></div>
 </div>
 
 <script>
-    const player = document.getElementById('main-player');
-    const dimName = document.getElementById('dim-name');
+    const player = document.getElementById('player');
 
-    function play(file, element) {
-        // 1. Update Buttons
+    function play(file, el) {
+        // Clear active states
         document.querySelectorAll('.btn').forEach(b => b.classList.remove('active'));
-        element.classList.add('active');
+        el.classList.add('active');
 
-        // 2. Load and Play from the "Videos" folder
-        // IMPORTANT: Ensure the folder name "Videos" starts with a Capital V if your folder does!
-        player.src = `Videos/${file}`;
-        dimName.innerText = file.replace('.mp4', '').replace(/_/g, ' ').toUpperCase();
-        
+        // FORCE PATH: Ensures it looks in your Videos folder
+        // Note: Capital 'V' must match your folder name exactly
+        player.src = "Videos/" + file;
+        document.getElementById('cur').innerText = file.replace('.mp4', '');
+
         player.load();
-        player.play().catch(e => console.log("Autoplay blocked or file not found"));
+        player.play().catch(() => {
+            console.log("User interaction required to play audio.");
+        });
     }
 
-    // Auto-advance to next video when current one ends
-    player.onended = function() {
-        let active = document.querySelector('.active');
-        let next = active.nextElementSibling;
-        if (next && next.classList.contains('btn')) {
-            next.click();
-        } else {
-            document.querySelector('.btn').click(); // Loop back to start
-        }
+    // Loop to next video automatically
+    player.onended = () => {
+        let next = document.querySelector('.active').nextElementSibling;
+        if (next) next.click();
+        else document.querySelector('.btn').click();
     };
 
     // Load first video on start
